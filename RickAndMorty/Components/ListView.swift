@@ -10,10 +10,12 @@ import CoreData
 
 struct ListView: View {
     
-    @ObservedObject var viewModel: ListViewModel
+    @ObservedObject var viewModel: ViewModel
+    
+    @State var path = NavigationPath()
 
     var body: some View {
-        NavigationView {
+        NavigationStack(path: $path) {
             if case let .loaded(loadedState) = viewModel.state  {
                 showList(characters: loadedState.characters)
             } else {
@@ -21,7 +23,13 @@ struct ListView: View {
             }
         }
         .onAppear {
-            viewModel.send(event: .viewAppeared)
+            viewModel.loadCharacters()
+        }
+        .navigationDestination(for: Router.self) { router in
+            switch router {
+            case .detail:
+//                DetailView(viewModel: <#DetailViewModel#>)
+            }
         }
     }
     
@@ -34,11 +42,10 @@ struct ListView: View {
             ForEach(characters) { character in
                 HStack {
                     RemoteImage(urlString: character.image)
-                    Text(character.name)
-                        .bold()
-                        .onTapGesture {
-                            viewModel.send(event: .characterTapped(character))
-                        }
+                    NavigationLink(value: Router.detail) {
+                        Text(character.name)
+                            .bold()
+                    }
                     
                 }
             }
