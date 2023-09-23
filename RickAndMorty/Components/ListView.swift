@@ -10,26 +10,18 @@ import CoreData
 
 struct ListView: View {
     
-    @ObservedObject var viewModel: ViewModel
-    
-    @State var path = NavigationPath()
+    @EnvironmentObject var viewModel: ViewModel
 
     var body: some View {
-        NavigationStack(path: $path) {
-            if case let .loaded(loadedState) = viewModel.state  {
-                showList(characters: loadedState.characters)
+        NavigationView {
+            if viewModel.characters.count != 0 {
+                showList(characters: viewModel.characters)
             } else {
                 loading()
             }
         }
         .onAppear {
             viewModel.loadCharacters()
-        }
-        .navigationDestination(for: Router.self) { router in
-            switch router {
-            case .detail:
-//                DetailView(viewModel: <#DetailViewModel#>)
-            }
         }
     }
     
@@ -42,11 +34,9 @@ struct ListView: View {
             ForEach(characters) { character in
                 HStack {
                     RemoteImage(urlString: character.image)
-                    NavigationLink(value: Router.detail) {
+                    NavigationLink(destination: DetailView(characterId: character.id, characterName: character.name)) {
                         Text(character.name)
-                            .bold()
                     }
-                    
                 }
             }
         }

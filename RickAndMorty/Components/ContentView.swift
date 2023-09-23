@@ -9,11 +9,9 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
-    
+    @StateObject var viewModel = ViewModel()
     var body: some View {
-        let interactor: CharacterInteractorProtocol = CharacterInteractor()
-        let viewModel = ViewModel(interactor: interactor)
-        let view = ListView(viewModel: viewModel)
-        view
+        ListView()
+            .environmentObject(viewModel)
     }
 }

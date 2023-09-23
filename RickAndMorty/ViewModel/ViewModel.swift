@@ -9,31 +9,39 @@ import Foundation
 
 final class ViewModel: ObservableObject {
     
-    enum State {
-        case loading
-        case loaded(LoadedState)
-    }
+    @Published private(set) var characters: [Character]
+    @Published private(set) var character: Character?
     
-    struct LoadedState {
-        let characters: [Character]
-    }
+    private var interactor: CharacterInteractorProtocol = CharacterInteractor()
     
-    @Published private(set) var state: State
-    
-    private var interactor: CharacterInteractorProtocol
-    
-    init(state: State = .loading, interactor: CharacterInteractorProtocol) {
-        self.state = state
-        self.interactor = interactor
+    init(characters: [Character] = [], character: Character? = nil) {
+        self.characters = characters
+        self.character = character
     }
     
     func loadCharacters() {
         Task { @MainActor in
             do {
                 let characters = try await interactor.getCharacters()
-                state = .loaded(LoadedState(characters: characters))
+                self.characters = characters
             }
             catch {}
+        }
+    }
+    
+    func loadCharacter(id: Int) {
+        Task { @MainActor in
+            do {
+                guard let character = try await interactor.getCharacter(id: id) else { return }
+                self.character = character
+            }
+            catch {}
+        }
+    }
+    
+    func resetDetail(newId: Int) {
+        if newId != self.character?.id {
+            self.character = nil
         }
     }
 }

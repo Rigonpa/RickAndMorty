@@ -10,14 +10,32 @@ import CoreData
 
 struct DetailView: View {
     
-    @ObservedObject var viewModel: ViewModel
+    @EnvironmentObject var viewModel: ViewModel
+    
+    var characterId: Int
+    var characterName: String
     
     var body: some View {
         VStack {
-            Image(systemName: "person.fill")
-            Text("Página detalle de personaje")
-        }.onAppear {
-            viewModel.send(event: .viewAppeared)
+            if let character = viewModel.character {
+                VStack {
+                    RemoteImage(urlString: character.image)
+                    Text(character.name)
+                    Text(character.species)
+                    Text("\(character.id)")
+                }
+                .navigationBarTitleDisplayMode(.inline)
+            } else {
+                loading()
+            }
         }
+        .onAppear {
+            viewModel.resetDetail(newId: characterId)
+            viewModel.loadCharacter(id: characterId)
+        }.navigationTitle(characterName)
+    }
+    
+    func loading() -> some View {
+        ProgressView()
     }
 }
