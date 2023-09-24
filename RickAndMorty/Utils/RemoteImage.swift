@@ -38,9 +38,8 @@ struct RemoteImage: View {
             Image(systemName: "person.fill")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .tint(Color.white)
                 .frame(height: 72)
-                .background(Color.gray)
+                .foregroundColor(Color.gray.opacity(0.4))
                 .cornerRadius(8)
                 .onAppear {
                     fetchData()

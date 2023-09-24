@@ -13,20 +13,42 @@ struct ListView: View {
     @EnvironmentObject var viewModel: ViewModel
 
     var body: some View {
-        NavigationView {
-            if viewModel.characters.count != 0 {
-                showList(characters: viewModel.characters)
-            } else {
-                loading()
+        if viewModel.appIsNotReady() {
+            SplashView()
+                .onAppear {
+                    viewModel.loadCharactersWith(status: .alive)
+                }
+        } else {
+            NavigationView {
+                
+                VStack {
+                    Spacer(minLength: 32)
+                    
+                    Text("Rick And Morty Characters")
+                        .font(.largeTitle)
+                        .bold()
+                        .frame(maxWidth: .greatestFiniteMagnitude, alignment: .center)
+                    
+                    SegmentedControlView(
+                        currentStatus: viewModel.currentStatus,
+                        statusValues: viewModel.statusValues
+                    ) { newStatus in
+                        viewModel.loadCharactersWith(status: newStatus)
+                    }
+                    .padding(.horizontal, 16)
+                    .frame(height: 64)
+                    
+                    if viewModel.characters.count != 0 {
+                        showList(characters: viewModel.characters)
+                    } else {
+                        loading()
+                    }
+                }
+            }
+            .onAppear {
+                viewModel.loadCharactersWith(status: .alive)
             }
         }
-        .onAppear {
-            viewModel.loadCharacters()
-        }
-    }
-    
-    func loading() -> some View {
-        ProgressView()
     }
     
     func showList(characters: [Character]) -> some View {
@@ -38,8 +60,21 @@ struct ListView: View {
                         Text(character.name)
                     }
                 }
+                .task {
+                    if viewModel.fetchingNextPage == false {
+                        viewModel.hasReached(lastVisible: character.id)
+                    }
+                }
             }
         }
-        .navigationTitle("Rick And Morty")
+        .overlay(alignment: .bottom) {
+            if viewModel.fetchingNextPage {
+                loading()
+            }
+        }
+    }
+    
+    func loading() -> some View {
+        ProgressView()
     }
 }
