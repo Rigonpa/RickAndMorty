@@ -7,9 +7,12 @@
 
 import Foundation
 
-struct Character: Identifiable, Equatable, Codable {
+struct Character: Identifiable, Codable, Hashable {
     let id: Int
     let name: String
     let species: String
     let image: String
+    let status: String
+    let episode: [String]?
+    var episodes: [Episode]?
 }

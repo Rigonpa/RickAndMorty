@@ -33,14 +33,13 @@ struct ListView: View {
         List {
             ForEach(characters) { character in
                 HStack {
-                    RemoteImage(urlString: character.image)
-                    NavigationLink(destination: DetailView(characterId: character.id, characterName: character.name)) {
+                    RemoteImage(urlString: character.image, isList: true)
+                    NavigationLink(destination: DetailView(characterId: character.id, characterName: character.name, characterImage: character.image)) {
                         Text(character.name)
                     }
                 }
             }
         }
         .navigationTitle("Rick And Morty")
-        .listRowSeparator(.hidden)
     }
 }

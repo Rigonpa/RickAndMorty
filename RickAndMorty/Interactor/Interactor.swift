@@ -7,27 +7,40 @@
 
 import Foundation
 
-protocol CharacterInteractorProtocol {
-    func getCharacters() async throws -> [Character]
-    func getCharacter(id: Int) async throws -> Character?
-}
+let apiURL = "https://rickandmortyapi.com/api"
 
-struct CharacterInteractor: CharacterInteractorProtocol {
+struct Interactor: InteractorProtocol {
+    var baseURL: URL {
+        guard let baseURL = URL(string: apiURL) else {
+            fatalError("URL not valid")
+        }
+        return baseURL
+    }
+    
+    let session = URLSession(configuration: URLSessionConfiguration.default)
     
     func getCharacters() async throws -> [Character] {
-        guard let url = URL(string: "https://rickandmortyapi.com/api/character/[1,2,3,4,5]") else { return [] }
+        guard let url = URL(string: "\(baseURL)/character/?status=alive") else { return [] }
         let request = URLRequest(url: url)
-        let (data, _) = try await URLSession.shared.data(for: request)
-        let characters = try JSONDecoder().decode([Character].self, from: data)
-        return characters
+        let (data, _) = try await session.data(for: request)
+        let response = try JSONDecoder().decode(CharacterResponse.self, from: data)
+        return response.results
     }
     
     func getCharacter(id: Int) async throws -> Character? {
-        guard let url = URL(string: "https://rickandmortyapi.com/api/character/\(id)") else { return nil }
+        guard let url = URL(string: "\(baseURL)/character/\(id)") else { return nil }
         let request = URLRequest(url: url)
-        let (data, _) = try await URLSession.shared.data(for: request)
+        let (data, _) = try await session.data(for: request)
         let character = try JSONDecoder().decode(Character.self, from: data)
         return character
+    }
+    
+    func getMultipleEpisodes(array: String) async throws -> [Episode] {
+        guard let url = URL(string: "\(baseURL)/episode/\(array)") else { return [] }
+        let request = URLRequest(url: url)
+        let (data, _) = try await session.data(for: request)
+        let episodes = try JSONDecoder().decode([Episode].self, from: data)
+        return episodes
     }
 }
 
