@@ -1,13 +1,13 @@
 //
-//  InteractorProtocol.swift
+//  RemoteApiProtocol.swift
 //  RickAndMorty
 //
-//  Created by Ricardo González Pacheco on 24/9/23.
+//  Created by Ricardo González Pacheco on 25/9/23.
 //
 
 import Foundation
 
-protocol InteractorProtocol {
+protocol RemoteApiProtocol {
     
     // MARK: - Characters
     
@@ -16,6 +16,6 @@ protocol InteractorProtocol {
     
     // MARK: - Episodes
     
-    func persistAllEpisodes() async throws -> Bool
-    func getAllEpisodes() throws -> [Episode]
+    func getEpisodesFirstPage() async throws -> EpisodeResponse?
+    func getEpisodesNext(page: Int) async throws -> [Episode]
 }

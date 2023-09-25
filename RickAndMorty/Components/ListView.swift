@@ -16,7 +16,7 @@ struct ListView: View {
         if viewModel.appIsNotReady() {
             SplashView()
                 .onAppear {
-                    viewModel.loadCharactersWith(status: .alive)
+                    viewModel.getInitialData()
                 }
         } else {
             NavigationView {
@@ -56,7 +56,7 @@ struct ListView: View {
             ForEach(characters) { character in
                 HStack {
                     RemoteImage(urlString: character.image, isList: true)
-                    NavigationLink(destination: DetailView(characterId: character.id, characterName: character.name, characterImage: character.image)) {
+                    NavigationLink(destination: DetailView(character: character)) {
                         Text(character.name)
                     }
                 }

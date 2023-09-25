@@ -7,17 +7,14 @@
 
 import Foundation
 
-let apiURL = "https://rickandmortyapi.com/api"
-
 struct Interactor: InteractorProtocol {
-    var baseURL: URL {
-        guard let baseURL = URL(string: apiURL) else {
-            fatalError("URL not valid")
-        }
-        return baseURL
+    let remoteApi: RemoteApiProtocol
+    let cache: CacheProtocol
+
+    init(remoteApi: RemoteApiProtocol, cache: CacheProtocol) {
+        self.remoteApi = remoteApi
+        self.cache = cache
     }
-    
-    let session = URLSession(configuration: URLSessionConfiguration.default)
 }
 
 // MARK: - Characters
@@ -25,27 +22,11 @@ struct Interactor: InteractorProtocol {
 extension Interactor {
     
     func getCharactersWith(status: Status) async throws -> CharacterResponse? {
-        guard let url = URL(string: "\(baseURL)/character/?status=\(status.rawValue)") else { return nil }
-        let request = URLRequest(url: url)
-        let (data, _) = try await session.data(for: request)
-        let response = try JSONDecoder().decode(CharacterResponse.self, from: data)
-        return response
-    }
-    
-    func getCharacter(id: Int) async throws -> Character? {
-        guard let url = URL(string: "\(baseURL)/character/\(id)") else { return nil }
-        let request = URLRequest(url: url)
-        let (data, _) = try await session.data(for: request)
-        let character = try JSONDecoder().decode(Character.self, from: data)
-        return character
+        try await remoteApi.getCharactersWith(status: status)
     }
     
     func getCharactersOfNext(page: Int, with status: Status) async throws -> CharacterResponse? {
-        guard let url = URL(string: "\(baseURL)/character/?page=\(page)&status=\(status.rawValue)") else { return nil }
-        let request = URLRequest(url: url)
-        let (data, _) = try await session.data(for: request)
-        let response = try JSONDecoder().decode(CharacterResponse.self, from: data)
-        return response
+        try await remoteApi.getCharactersOfNext(page: page, with: status)
     }
 }
 
@@ -53,12 +34,43 @@ extension Interactor {
 
 extension Interactor {
     
-    func getMultipleEpisodes(array: String) async throws -> [Episode] {
-        guard let url = URL(string: "\(baseURL)/episode/\(array)") else { return [] }
-        let request = URLRequest(url: url)
-        let (data, _) = try await session.data(for: request)
-        let episodes = try JSONDecoder().decode([Episode].self, from: data)
-        return episodes
+    func getAllEpisodes() throws -> [Episode] {
+        try cache.getEpisodes()
     }
+    
+    func persistAllEpisodes() async throws -> Bool {
+        
+        // 1. Check if episodes are already locally persisted
+        let localEpisodes = try cache.getEpisodes()
+        guard localEpisodes.count == 0 else { return true }
+        
+        // 2. Get remote episodes
+        let remoteEpisodes = try await getRemoteEpisodes()
+        
+        // 3. Save them locally
+        let done = try cache.persistEpisodes(episodes: remoteEpisodes)
+        
+        return done
+    }
+    
+    fileprivate func getRemoteEpisodes() async throws -> [Episode] {
+        
+        var totalEpisodes: [Episode] = []
+        
+        guard let response = try await remoteApi.getEpisodesFirstPage() else { return []}
+        
+        totalEpisodes.append(contentsOf: response.results)
+        let totalPages = response.info.pages ?? 0
+        var currentPage = 2
+        
+        for _ in currentPage...totalPages {
+            let moreEpisodes = try await remoteApi.getEpisodesNext(page: currentPage)
+            totalEpisodes.append(contentsOf: moreEpisodes)
+            currentPage += 1
+        }
+        
+        return totalEpisodes
+    }
+    
 }
 

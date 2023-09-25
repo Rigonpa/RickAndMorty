@@ -12,37 +12,33 @@ struct DetailView: View {
     
     @EnvironmentObject var viewModel: ViewModel
     
-    var characterId: Int
-    var characterName: String
-    var characterImage: String
+    var character: Character
     
     var color = Color.random()
     
     var body: some View {
         VStack {
-            if let character = viewModel.character {
-                ScrollView {
-                    CharacterInfoView(
-                        character: character,
-                        image: characterImage,
-                        color: color
-                    )
-                    if let episodes = character.episodes, episodes.count != 0 {
+            ScrollView {
+                CharacterInfoView(
+                    character: character,
+                    color: color
+                )
+                if let characterWithEpisodes = viewModel.character {
+                    if let episodes = characterWithEpisodes.episodes,
+                        episodes.count != 0 {
                         CharacterEpisodesView(
                             episodes: episodes,
                             color: color
                         )
                     }
                 }
-                .navigationBarTitleDisplayMode(.inline)
-            } else {
-                loading()
             }
+            .navigationBarTitleDisplayMode(.inline)
         }
         .onAppear {
-            viewModel.resetDetail(newId: characterId)
-            viewModel.loadCharacter(id: characterId)
-        }.navigationTitle(characterName)
+            viewModel.loadEpisodes(of: character)
+        }
+        .navigationTitle(character.name)
     }
     
     func loading() -> some View {

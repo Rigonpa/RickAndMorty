@@ -9,11 +9,10 @@ import SwiftUI
 
 struct CharacterInfoView: View {
     let character: Character
-    let image: String
     let color: Color
     var body: some View {
         Spacer(minLength: 32)
-        RemoteImage(urlString: image, isList: false, color: color)
+        RemoteImage(urlString: character.image, isList: false, color: color)
         Spacer(minLength: 20)
         Text(character.name)
             .font(.title3)

@@ -22,9 +22,9 @@ final class ViewModel: ObservableObject {
     var currentPage: Int = 1
     var totalPages: Int = 0
     
-    private var interactor: InteractorProtocol = Interactor()
-    
-    init(characters: [Character] = [], character: Character? = nil) {
+    private var interactor: InteractorProtocol
+    init(interactor: InteractorProtocol, characters: [Character] = [], character: Character? = nil) {
+        self.interactor = interactor
         self.characters = characters
         self.character = character
     }
@@ -33,12 +33,28 @@ final class ViewModel: ObservableObject {
 
 extension ViewModel {
     
+    func getInitialData() {
+        Task { @MainActor in
+            do {
+                let _ = try await interactor.persistAllEpisodes()
+                
+                loadCharactersWith(status: .alive)
+            }
+            catch let error {
+                print(error)
+            }
+        }
+    }
+    
     func loadCharactersWith(status: Status) {
         Task { @MainActor in
             do {
                 guard let response = try await interactor.getCharactersWith(status: status) else { return }
+                
                 totalPages = response.info.count ?? 0
+                
                 let charactersNotDuplicated = removeDuplicates(characters: response.results)
+                
                 if !appIsReady {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {[weak self] in
                         self?.appIsReady = true
@@ -54,14 +70,17 @@ extension ViewModel {
         }
     }
     
-    func loadCharacter(id: Int) {
+    func loadCharactersOfNextPage() {
         Task { @MainActor in
             do {
-                guard var currentCharacter = try await interactor.getCharacter(id: id) else { return }
-                let array = getEpisodesArray(episode: currentCharacter.episode ?? [])
-                let episodes = try await interactor.getMultipleEpisodes(array: array)
-                currentCharacter.episodes = episodes
-                self.character = currentCharacter
+                fetchingNextPage = true
+                currentPage += 1
+                
+                guard let response = try await interactor.getCharactersOfNext(page: currentPage, with: currentStatus) else { return }
+                let charactersNotDuplicated = removeDuplicates(characters: response.results)
+                self.characters += charactersNotDuplicated
+                
+                fetchingNextPage = false
             }
             catch let error {
                 print(error)
@@ -69,19 +88,22 @@ extension ViewModel {
         }
     }
     
-    func loadCharactersOfNextPage() {
-        Task { @MainActor in
-            do {
-                fetchingNextPage = true
-                currentPage += 1
-                guard let response = try await interactor.getCharactersOfNext(page: currentPage, with: currentStatus) else { return }
-                let charactersNotDuplicated = removeDuplicates(characters: response.results)
-                self.characters += charactersNotDuplicated
-                fetchingNextPage = false
-            }
-            catch let error {
-                print(error)
-            }
+    func loadEpisodes(of character: Character) {
+        var characterWithEpisodes = character
+        do {
+            
+            let allEpisodes = try interactor.getAllEpisodes()
+            
+            let episodes = getSpecific(
+                urls: character.episode ?? [],
+                allEpisodes: allEpisodes
+            )
+            
+            characterWithEpisodes.episodes = episodes
+            self.character = characterWithEpisodes
+        }
+        catch let error {
+            print(error)
         }
     }
 }
@@ -92,12 +114,6 @@ extension ViewModel {
     
     func appIsNotReady() -> Bool {
         appIsReady == false
-    }
-    
-    func resetDetail(newId: Int) {
-        if newId != self.character?.id {
-            self.character = nil
-        }
     }
     
     fileprivate func removeDuplicates(characters: [Character]) -> [Character] {
@@ -112,15 +128,13 @@ extension ViewModel {
         } as? [Character] ?? []
     }
     
-    fileprivate func getEpisodesArray(episode: [String]) -> String {
+    fileprivate func getSpecific(urls: [String], allEpisodes: [Episode]) -> [Episode] {
         
-        let v1 = episode.map { $0.replacingOccurrences(of: "https://rickandmortyapi.com/api/episode/", with: "") }
-        let v2 = v1.reduce("") { partialResult, value in
-            partialResult == "" ? value : partialResult + "," + value
-        }
-        let v3 = "[" + v2 + "]"
+        let episodesIds = urls.map { $0.replacingOccurrences(of: "https://rickandmortyapi.com/api/episode/", with: "") }
         
-        return v3
+        let specificEpisodes = allEpisodes.filter { episodesIds.contains("\($0.id)") }
+        
+        return specificEpisodes
     }
     
     func hasReached(lastVisible characterId: Int) {
