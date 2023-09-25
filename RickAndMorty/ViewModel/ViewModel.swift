@@ -29,6 +29,7 @@ final class ViewModel: ObservableObject {
         self.character = character
     }
 }
+
 // MARK: - Remote data methods
 
 extension ViewModel {

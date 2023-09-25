@@ -12,7 +12,17 @@ struct CharacterInfoView: View {
     let color: Color
     var body: some View {
         Spacer(minLength: 32)
-        RemoteImage(urlString: character.image, isList: false, color: color)
+        CacheAsyncImage(urlString: character.image) { image in
+            image
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(height: 260, alignment: .top)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 32)
+                        .stroke(color, lineWidth: 4)
+                )
+                .cornerRadius(32)
+        }
         Spacer(minLength: 20)
         Text(character.name)
             .font(.title3)

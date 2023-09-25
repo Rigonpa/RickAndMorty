@@ -54,17 +54,12 @@ struct ListView: View {
     func showList(characters: [Character]) -> some View {
         List {
             ForEach(characters) { character in
-                HStack {
-                    RemoteImage(urlString: character.image, isList: true)
-                    NavigationLink(destination: DetailView(character: character)) {
-                        Text(character.name)
+                CharacterRowView(character: character)
+                    .task {
+                        if viewModel.fetchingNextPage == false {
+                            viewModel.hasReached(lastVisible: character.id)
+                        }
                     }
-                }
-                .task {
-                    if viewModel.fetchingNextPage == false {
-                        viewModel.hasReached(lastVisible: character.id)
-                    }
-                }
             }
         }
         .overlay(alignment: .bottom) {
