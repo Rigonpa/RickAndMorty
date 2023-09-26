@@ -57,7 +57,7 @@ extension Interactor {
         
         var totalEpisodes: [Episode] = []
         
-        guard let response = try await remoteApi.getEpisodesFirstPage() else { return []}
+        guard let response = try await remoteApi.getEpisodesFirstPage() else { return [] }
         
         totalEpisodes.append(contentsOf: response.results)
         let totalPages = response.info.pages ?? 0

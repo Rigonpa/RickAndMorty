@@ -22,7 +22,7 @@ final class ViewModel: ObservableObject {
     var currentPage: Int = 1
     var totalPages: Int = 0
     
-    private var interactor: InteractorProtocol
+    var interactor: InteractorProtocol
     init(interactor: InteractorProtocol, characters: [Character] = [], character: Character? = nil) {
         self.interactor = interactor
         self.characters = characters
@@ -52,22 +52,27 @@ extension ViewModel {
             do {
                 guard let response = try await interactor.getCharactersWith(status: status) else { return }
                 
-                totalPages = response.info.count ?? 0
-                
-                let charactersNotDuplicated = removeDuplicates(characters: response.results)
-                
-                if !appIsReady {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {[weak self] in
-                        self?.appIsReady = true
-                        self?.characters = charactersNotDuplicated
-                    }
-                } else {
-                    self.characters = charactersNotDuplicated
-                }
+                manageCharacters(response: response)
             }
             catch let error {
                 print(error)
             }
+        }
+    }
+    
+    fileprivate func manageCharacters(response: CharacterResponse) {
+        
+        totalPages = response.info.count ?? 0
+        
+        let charactersNotDuplicated = removeDuplicates(characters: response.results)
+        
+        if !appIsReady {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {[weak self] in
+                self?.appIsReady = true
+                self?.characters = charactersNotDuplicated
+            }
+        } else {
+            self.characters = charactersNotDuplicated
         }
     }
     
