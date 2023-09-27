@@ -46,7 +46,6 @@
 		9382D3BE2AC300EC00C9E911 /* ExampleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9382D3BD2AC300EC00C9E911 /* ExampleViewModel.swift */; };
 		9382D3C02AC3010700C9E911 /* ExampleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9382D3BF2AC3010700C9E911 /* ExampleView.swift */; };
 		93DAB9C82AC346A3008DF794 /* ViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DAB9C72AC346A3008DF794 /* ViewModelTests.swift */; };
-		93DAB9CA2AC35ADD008DF794 /* InteractorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DAB9C92AC35ADD008DF794 /* InteractorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,7 +108,6 @@
 		9382D3BD2AC300EC00C9E911 /* ExampleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleViewModel.swift; sourceTree = "<group>"; };
 		9382D3BF2AC3010700C9E911 /* ExampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleView.swift; sourceTree = "<group>"; };
 		93DAB9C72AC346A3008DF794 /* ViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModelTests.swift; sourceTree = "<group>"; };
-		93DAB9C92AC35ADD008DF794 /* InteractorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -184,7 +182,6 @@
 			isa = PBXGroup;
 			children = (
 				93DAB9C72AC346A3008DF794 /* ViewModelTests.swift */,
-				93DAB9C92AC35ADD008DF794 /* InteractorTests.swift */,
 				9382D3C12AC3452600C9E911 /* Example */,
 			);
 			path = RickAndMortyTests;
@@ -501,7 +498,6 @@
 			files = (
 				9382D3BA2AC2FF6200C9E911 /* ExampleDataServiceTests.swift in Sources */,
 				9382D3B62AC2E02D00C9E911 /* ExampleViewModelTests.swift in Sources */,
-				93DAB9CA2AC35ADD008DF794 /* InteractorTests.swift in Sources */,
 				93DAB9C82AC346A3008DF794 /* ViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

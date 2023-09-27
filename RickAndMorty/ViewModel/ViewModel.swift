@@ -60,7 +60,7 @@ extension ViewModel {
         }
     }
     
-    fileprivate func manageCharacters(response: CharacterResponse) {
+    func manageCharacters(response: CharacterResponse) {
         
         totalPages = response.info.count ?? 0
         
@@ -68,6 +68,7 @@ extension ViewModel {
         
         if !appIsReady {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {[weak self] in
+                // For keeping splash view shown at least 2 seconds
                 self?.appIsReady = true
                 self?.characters = charactersNotDuplicated
             }
@@ -77,16 +78,16 @@ extension ViewModel {
     }
     
     func loadCharactersOfNextPage() {
+        
+        fetchingNextPage = true
+        currentPage += 1
+        
         Task { @MainActor in
             do {
-                fetchingNextPage = true
-                currentPage += 1
                 
                 guard let response = try await interactor.getCharactersOfNext(page: currentPage, with: currentStatus) else { return }
-                let charactersNotDuplicated = removeDuplicates(characters: response.results)
-                self.characters += charactersNotDuplicated
                 
-                fetchingNextPage = false
+                manageCharactersOfNext(response: response)
             }
             catch let error {
                 print(error)
@@ -94,23 +95,36 @@ extension ViewModel {
         }
     }
     
+    func manageCharactersOfNext(response: CharacterResponse) {
+        let charactersNotDuplicated = removeDuplicates(characters: response.results)
+        self.characters += charactersNotDuplicated
+        
+        fetchingNextPage = false
+        
+    }
+    
     func loadEpisodes(of character: Character) {
-        var characterWithEpisodes = character
         do {
             
             let allEpisodes = try interactor.getAllEpisodes()
             
-            let episodes = getSpecific(
-                urls: character.episode ?? [],
-                allEpisodes: allEpisodes
-            )
-            
-            characterWithEpisodes.episodes = episodes
-            self.character = characterWithEpisodes
+            manageEpisodes(allEpisodes, of: character)
         }
         catch let error {
             print(error)
         }
+    }
+    
+    func manageEpisodes(_ allEpisodes: [Episode], of character: Character) {
+        var characterWithEpisodes = character
+        
+        let episodes = getSpecific(
+            urls: character.episode ?? [],
+            allEpisodes: allEpisodes
+        )
+        
+        characterWithEpisodes.episodes = episodes
+        self.character = characterWithEpisodes
     }
 }
 
@@ -122,7 +136,7 @@ extension ViewModel {
         appIsReady == false
     }
     
-    fileprivate func removeDuplicates(characters: [Character]) -> [Character] {
+    func removeDuplicates(characters: [Character]) -> [Character] {
         return characters.reduce([]) { partialResult, character in
             var charactersIn = partialResult as? [Character] ?? []
             let names = charactersIn.map { $0.name }
@@ -134,20 +148,20 @@ extension ViewModel {
         } as? [Character] ?? []
     }
     
-    fileprivate func getSpecific(urls: [String], allEpisodes: [Episode]) -> [Episode] {
-        
-        let episodesIds = urls.map { $0.replacingOccurrences(of: "https://rickandmortyapi.com/api/episode/", with: "") }
-        
-        let specificEpisodes = allEpisodes.filter { episodesIds.contains("\($0.id)") }
-        
-        return specificEpisodes
-    }
-    
     func hasReached(lastVisible characterId: Int) {
         let lastArrayCharacterId = characters.last?.id ?? 0
         if characterId == lastArrayCharacterId {
             guard totalPages > currentPage else { return }
             loadCharactersOfNextPage()
         }
+    }
+    
+    func getSpecific(urls: [String], allEpisodes: [Episode]) -> [Episode] {
+        
+        let episodesIds = urls.map { $0.replacingOccurrences(of: "https://rickandmortyapi.com/api/episode/", with: "") }
+        
+        let specificEpisodes = allEpisodes.filter { episodesIds.contains("\($0.id)") }
+        
+        return specificEpisodes
     }
 }
