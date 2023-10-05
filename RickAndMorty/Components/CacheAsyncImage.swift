@@ -19,7 +19,7 @@ struct CacheAsyncImage<Content>: View where Content: View {
     
     init(
         urlString: String,
-        @ViewBuilder content: @escaping (Image) -> Content
+        content: @escaping (Image) -> Content
     ) {
         self.urlString = urlString
         self.content = content
@@ -33,16 +33,21 @@ struct CacheAsyncImage<Content>: View where Content: View {
                 content(image)
             } else {
                 if let data = data, let uiimage = UIImage(data: data) {
-                    content(Image(uiImage: uiimage))
-                    
+                    let image = Image(uiImage: uiimage)
+                    cacheAndShowIt(image: image)
                 } else {
                     content(Image("placeholder"))
                 }
-                
             }
         }.onAppear {
             fetchData()
         }
+    }
+    
+    func cacheAndShowIt(image: Image) -> some View {
+        ImageCache[url] = image
+
+        return content(image)
     }
     
     fileprivate func fetchData() {

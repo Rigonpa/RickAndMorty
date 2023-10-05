@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 let apiURL = "https://rickandmortyapi.com/api"
 
